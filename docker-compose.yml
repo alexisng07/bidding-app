@@ -1,0 +1,48 @@
+services:
+  app:
+    build: ./docker/php
+    container_name: bidding_app
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+    networks:
+      - bidding
+    expose:
+      - "9000"
+
+  nginx:
+    image: nginx:1.25
+    container_name: bidding_nginx
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+    volumes:
+      - ./:/var/www/html:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - bidding
+
+  mysql:
+    image: mysql:8.0
+    container_name: bidding_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: bidding
+      MYSQL_USER: bidding
+      MYSQL_PASSWORD: secret
+    volumes:
+      - dbdata:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - bidding
+
+volumes:
+  dbdata:
+  redisdata:
+
+networks:
+  bidding:
+    driver: bridge
